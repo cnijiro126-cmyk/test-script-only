@@ -162,9 +162,9 @@ end
 		local moveX = deltaX * settings.smoothness * settings.aimStrength
 		local moveY = deltaY * settings.smoothness * settings.aimStrength
 
-			-- Deadzone: stop twitching when already on target.
-	if settings.smoothness >= 0.99 then
-		-- Max smoothness = instant snap.
+					-- Deadzone: stop twitching when already on target.
+	if settings.smoothness >= 2 then
+		-- Sobrang lakas = instant snap.
 		if math.abs(moveX) < 0.01 and math.abs(moveY) < 0.01 then return end
 	else
 		if math.abs(moveX) < 0.5 and math.abs(moveY) < 0.5 then return end
@@ -416,7 +416,7 @@ end
 	end
 
 	createSlider("FOV", 5, 20, 400, function() return settings.fovRadius end, function(v) settings.fovRadius = v end)
-		createSlider("Smoothness", 6, 0.05, 1, function() return settings.smoothness end, function(v) settings.smoothness = v end)
+			createSlider("Smoothness", 6, 0.05, 5, function() return settings.smoothness end, function(v) settings.smoothness = v end)
 	createSlider("Aim Strength", 7, 1, 10, function() return settings.aimStrength end, function(v) settings.aimStrength = v end)
 
 	local keybindRow = Instance.new("Frame")
