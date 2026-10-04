@@ -28,7 +28,6 @@ end
 		targetLock = true,
 		fovRadius = 120,
 		smoothness = 0.35,
-		aimStrength = 1,
 		headshot = false,
 		toggleKey = Enum.KeyCode.P,
 		menuKey = Enum.KeyCode.Period,
@@ -159,13 +158,16 @@ end
 				local mousePos = userInputService:GetMouseLocation()
 		local deltaX = screenPos.X - mousePos.X
 		local deltaY = screenPos.Y - mousePos.Y
-		local moveX = deltaX * settings.smoothness * settings.aimStrength
-		local moveY = deltaY * settings.smoothness * settings.aimStrength
+				local moveX = deltaX * settings.smoothness
+		local moveY = deltaY * settings.smoothness
 
-					-- Deadzone: stop twitching when already on target.
+						-- Deadzone: stop twitching when already on target.
 	if settings.smoothness >= 2 then
 		-- Sobrang lakas = instant snap.
 		if math.abs(moveX) < 0.01 and math.abs(moveY) < 0.01 then return end
+	elseif settings.smoothness >= 1 then
+		-- Naka-max na smoothness = halos instant.
+		if math.abs(moveX) < 0.1 and math.abs(moveY) < 0.1 then return end
 	else
 		if math.abs(moveX) < 0.5 and math.abs(moveY) < 0.5 then return end
 	end
@@ -416,8 +418,7 @@ end
 	end
 
 	createSlider("FOV", 5, 20, 400, function() return settings.fovRadius end, function(v) settings.fovRadius = v end)
-			createSlider("Smoothness", 6, 0.05, 5, function() return settings.smoothness end, function(v) settings.smoothness = v end)
-	createSlider("Aim Strength", 7, 1, 10, function() return settings.aimStrength end, function(v) settings.aimStrength = v end)
+				createSlider("Smoothness", 6, 0.05, 10, function() return settings.smoothness end, function(v) settings.smoothness = v end)
 
 	local keybindRow = Instance.new("Frame")
 	keybindRow.Size = UDim2.new(1, -20, 0, 28)
@@ -460,7 +461,7 @@ end
 -- Streamer notice.
 local noticeRow = Instance.new("Frame")
 noticeRow.Size = UDim2.new(1, -20, 0, 34)
-noticeRow.Position = UDim2.new(0, 10, 0, 10 + 9 * 32)
+noticeRow.Position = UDim2.new(0, 10, 0, 10 + 8 * 32)
 noticeRow.BackgroundTransparency = 1
 noticeRow.ZIndex = 2
 noticeRow.Parent = contentFrame
@@ -480,7 +481,7 @@ noticeLabel.Parent = noticeRow
 
 	local headshotRow = Instance.new("Frame")
 	headshotRow.Size = UDim2.new(1, -20, 0, 28)
-	headshotRow.Position = UDim2.new(0, 10, 0, 10 + 10 * 32)
+		headshotRow.Position = UDim2.new(0, 10, 0, 10 + 9 * 32)
 	headshotRow.BackgroundTransparency = 1
 	headshotRow.ZIndex = 2
 	headshotRow.Parent = contentFrame
