@@ -172,9 +172,7 @@ end
 		if math.abs(moveX) < 0.5 and math.abs(moveY) < 0.5 then return end
 	end
 
-		local jitterX = (math.random() - 0.5) * 0.6
-		local jitterY = (math.random() - 0.5) * 0.6
-		mousemoverel(moveX + jitterX, moveY + jitterY)
+				mousemoverel(moveX, moveY)
 	end)
 
 	-- MENU UI.
@@ -418,7 +416,7 @@ end
 	end
 
 	createSlider("FOV", 5, 20, 400, function() return settings.fovRadius end, function(v) settings.fovRadius = v end)
-				createSlider("Smoothness", 6, 0.05, 10, function() return settings.smoothness end, function(v) settings.smoothness = v end)
+					createSlider("Smoothness", 6, 0.05, 2, function() return settings.smoothness end, function(v) settings.smoothness = v end)
 
 	local keybindRow = Instance.new("Frame")
 	keybindRow.Size = UDim2.new(1, -20, 0, 28)
