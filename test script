@@ -3,17 +3,7 @@
 	-- ============================================================
 -- Anti-bypass check.
 if not _G["YOUSEF-OWNER-123"] then
--- Load ESP script mula sa GitHub kung hindi pa naka-load.
-if not _G["YOUSEF_ESP_LOADED"] then
-    pcall(function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/cnijiro126-cmyk/esp-only/refs/heads/main/esp%20only"))()
-    end)
-    task.wait(0.3) -- Hintayin mag-load.
-end
 
--- Kunin ang ESP settings mula sa shared global.
-local espSettings = _G["YOUSEF_ESP_SETTINGS"]
-local espCache = _G["YOUSEF_ESP_CACHE"]
     local player = game:GetService("Players").LocalPlayer
     if player then
         player:Kick("Unauthorized execution. Please use the official key system.")
