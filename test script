@@ -162,15 +162,15 @@ end
 		local moveY = deltaY * settings.smoothness
 
 						-- Deadzone: stop twitching when already on target.
-	if settings.smoothness >= 2 then
-    -- Sobrang lakas = instant snap, pero may deadzone para hindi mag-oscillate.
+	if settings.smoothness >= 1.5 then
+    -- Malakas pero steady — may deadzone.
     if math.abs(deltaX) < 2 and math.abs(deltaY) < 2 then return end
-	elseif settings.smoothness >= 1 then
-		-- Naka-max na smoothness = halos instant.
-		if math.abs(moveX) < 0.1 and math.abs(moveY) < 0.1 then return end
-	else
-		if math.abs(moveX) < 0.5 and math.abs(moveY) < 0.5 then return end
-	end
+elseif settings.smoothness >= 0.8 then
+    -- Katamtaman.
+    if math.abs(moveX) < 0.1 and math.abs(moveY) < 0.1 then return end
+else
+    if math.abs(moveX) < 0.5 and math.abs(moveY) < 0.5 then return end
+end
 
 				mousemoverel(moveX, moveY)
 	end)
@@ -416,7 +416,7 @@ end
 	end
 
 	createSlider("FOV", 5, 20, 400, function() return settings.fovRadius end, function(v) settings.fovRadius = v end)
-					createSlider("Smoothness", 6, 0.05, 2, function() return settings.smoothness end, function(v) settings.smoothness = v end)
+					createSlider("Smoothness", 6, 0.05, 1.5, function() return settings.smoothness end, function(v) settings.smoothness = v end)
 
 	local keybindRow = Instance.new("Frame")
 	keybindRow.Size = UDim2.new(1, -20, 0, 28)
