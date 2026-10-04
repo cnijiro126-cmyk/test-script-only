@@ -163,8 +163,8 @@ end
 
 						-- Deadzone: stop twitching when already on target.
 	if settings.smoothness >= 2 then
-		-- Sobrang lakas = instant snap.
-		if math.abs(moveX) < 0.01 and math.abs(moveY) < 0.01 then return end
+    -- Sobrang lakas = instant snap, pero may deadzone para hindi mag-oscillate.
+    if math.abs(deltaX) < 2 and math.abs(deltaY) < 2 then return end
 	elseif settings.smoothness >= 1 then
 		-- Naka-max na smoothness = halos instant.
 		if math.abs(moveX) < 0.1 and math.abs(moveY) < 0.1 then return end
