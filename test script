@@ -10,6 +10,7 @@ if not _G["YOUSEF-OWNER-123"] then
     end
     return
 end
+	
 	-- Services.
 	local playersService = game:GetService("Players")
 	local runService = game:GetService("RunService")
@@ -43,6 +44,93 @@ end
 	local espEnabled = true
 local espCache = {}
 local ESP_MAX_HEALTH = 150
+-- ================= ESP ENGINE =================
+local lastEspUpdate = 0
+local function createEsp(player)
+    if player == localPlayer or espCache[player] then return end
+    espCache[player] = {
+        box = Drawing.new("Square"),
+        healthBarBg = Drawing.new("Line"),
+        healthBar = Drawing.new("Line"),
+        healthText = Drawing.new("Text")
+    }
+    local d = espCache[player]
+    d.box.Thickness = 1.5 d.box.Filled = false d.box.Color = Color3.fromRGB(255, 255, 255)
+    d.healthBarBg.Thickness = 3 d.healthBarBg.Color = Color3.fromRGB(0, 0, 0)
+    d.healthBar.Thickness = 3 d.healthBar.Color = Color3.fromRGB(0, 255, 0)
+    d.healthText.Size = 12 d.healthText.Center = true d.healthText.Outline = true d.healthText.Color = Color3.fromRGB(0, 255, 0)
+end
+
+local function removeEsp(player)
+    if espCache[player] then
+        for _, obj in pairs(espCache[player]) do obj:Remove() end
+        espCache[player] = nil
+    end
+end
+
+local function hideAllEsp()
+    for _, esp in pairs(espCache) do
+        esp.box.Visible = false esp.healthBarBg.Visible = false esp.healthBar.Visible = false esp.healthText.Visible = false
+    end
+end
+
+for _, player in ipairs(playersService:GetPlayers()) do createEsp(player) end
+playersService.PlayerAdded:Connect(createEsp)
+playersService.PlayerRemoving:Connect(removeEsp)
+
+runService.RenderStepped:Connect(function()
+    if not espEnabled then hideAllEsp() return end
+    local now = os.clock()
+    if now - lastEspUpdate < (1/60) then return end
+    lastEspUpdate = now
+
+    for player, esp in pairs(espCache) do
+        local char = player.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        local head = char and char:FindFirstChild("Head")
+        local hum = char and char:FindFirstChild("Humanoid")
+
+        if not (root and head and hum) or hum.Health <= 0 then
+            esp.box.Visible = false esp.healthBarBg.Visible = false esp.healthBar.Visible = false esp.healthText.Visible = false continue
+        end
+
+        local lRoot = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if lRoot and (lRoot.Position - root.Position).Magnitude > 500 then
+            esp.box.Visible = false esp.healthBarBg.Visible = false esp.healthBar.Visible = false esp.healthText.Visible = false continue
+        end
+
+        local topScreen, topVis = currentCamera:WorldToViewportPoint(head.Position + Vector3.new(0, head.Size.Y / 2 + 0.1, 0))
+        local botScreen, botVis = currentCamera:WorldToViewportPoint(root.Position - Vector3.new(0, 3.2, 0))
+
+        if topVis and botVis then
+            local height = botScreen.Y - topScreen.Y
+            local width = height * 0.45
+            local boxX = topScreen.X - width / 2
+
+            esp.box.Position = Vector2.new(boxX, topScreen.Y)
+            esp.box.Size = Vector2.new(width, height)
+            esp.box.Visible = true
+
+            local hpPct = math.clamp(hum.Health / ESP_MAX_HEALTH, 0, 1)
+            esp.healthBarBg.From = Vector2.new(boxX - 6, topScreen.Y)
+            esp.healthBarBg.To = Vector2.new(boxX - 6, topScreen.Y + height)
+            esp.healthBarBg.Visible = true
+
+            esp.healthBar.From = Vector2.new(boxX - 6, topScreen.Y + height * (1 - hpPct))
+            esp.healthBar.To = Vector2.new(boxX - 6, topScreen.Y + height)
+            esp.healthBar.Color = Color3.fromRGB(255 * (1 - hpPct), 255 * hpPct, 0)
+            esp.healthBar.Visible = true
+
+            esp.healthText.Text = math.floor(hpPct * 150) .. "%"
+            esp.healthText.Position = Vector2.new(topScreen.X, topScreen.Y - 16)
+            esp.healthText.Color = Color3.fromRGB(255 * (1 - hpPct), 255 * hpPct, 0)
+            esp.healthText.Visible = true
+        else
+            esp.box.Visible = false esp.healthBarBg.Visible = false esp.healthBar.Visible = false esp.healthText.Visible = false
+        end
+    end
+end)
+-- ==============================================
 
 	---Clean up the selection box.
 	local function clearSelectionBox()
@@ -471,7 +559,7 @@ noticeRow.Parent = contentFrame
 local noticeLabel = Instance.new("TextLabel")
 noticeLabel.Size = UDim2.new(1, 0, 1, 0)
 noticeLabel.BackgroundTransparency = 1
-noticeLabel.Text = "Press (.) to hide. Silent Aim Assist - safe for streamers"
+noticeLabel.Text = "Press (.) to hide GUI | Press F1 for ESP"
 noticeLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
 noticeLabel.TextSize = 10
 noticeLabel.Font = Enum.Font.Gotham
@@ -539,6 +627,11 @@ noticeLabel.Parent = noticeRow
 
 	if input.KeyCode == settings.toggleKey and not keybindListening then
 		settings.enabled = not settings.enabled
+	end
+    -- F1 ESP Toggle Keybind
+	if input.KeyCode == Enum.KeyCode.F1 then
+		espEnabled = not espEnabled
+		if not espEnabled then hideAllEsp() end
 	end
 
 	if input.KeyCode == settings.menuKey and not keybindListening then
