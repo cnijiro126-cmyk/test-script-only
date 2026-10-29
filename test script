@@ -11,6 +11,7 @@ if not _G["YOUSEF-OWNER-123"] then
     return
 end
 	
+		
 	-- Services.
 	local playersService = game:GetService("Players")
 	local runService = game:GetService("RunService")
@@ -23,7 +24,7 @@ end
 	local currentCamera = workspaceService.CurrentCamera
 
 	-- Settings.
-		local settings = {
+				local settings = {
 		enabled = true,
 		teamCheck = true,
 		wallCheck = true,
@@ -33,6 +34,7 @@ end
 		headshot = false,
 		toggleKey = Enum.KeyCode.P,
 		menuKey = Enum.KeyCode.Period,
+		scopedOnly = true, -- I-ON natin para hindi tumalon kapag hipfire
 	}
 
 	-- Runtime state.
@@ -206,10 +208,18 @@ end)
 		return closest, closestDist
 	end
 
-	-- Aim loop.
+				-- Aim loop.
 	runService.RenderStepped:Connect(function()
 		if not settings.enabled then
 			clearSelectionBox()
+			return
+		end
+
+		local mb2Pressed = userInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
+		local mb1Pressed = userInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
+
+		if not mb2Pressed and not mb1Pressed then
+			aimActive = false
 			return
 		end
 
@@ -247,24 +257,32 @@ end)
 		local screenPos, onScreen = currentCamera:WorldToViewportPoint(part.Position)
 		if not onScreen then return end
 
-				local mousePos = userInputService:GetMouseLocation()
+		local mousePos = userInputService:GetMouseLocation()
 		local deltaX = screenPos.X - mousePos.X
 		local deltaY = screenPos.Y - mousePos.Y
-				local moveX = deltaX * settings.smoothness
+		
+		-- Gagamitin natin ang settings.smoothness PARA SA PAREHO (Scope at Hipfire)
+		local moveX = deltaX * settings.smoothness
 		local moveY = deltaY * settings.smoothness
 
-						-- Deadzone: stop twitching when already on target.
-	if settings.smoothness >= 1.5 then
-    -- Malakas pero steady — may deadzone.
-    if math.abs(deltaX) < 2 and math.abs(deltaY) < 2 then return end
-elseif settings.smoothness >= 0.8 then
-    -- Katamtaman.
-    if math.abs(moveX) < 0.1 and math.abs(moveY) < 0.1 then return end
-else
-    if math.abs(moveX) < 0.5 and math.abs(moveY) < 0.5 then return end
-end
+		-- Deadzone check
+		if settings.smoothness >= 1.5 then
+			if math.abs(deltaX) < 2 and math.abs(deltaY) < 2 then return end
+		elseif settings.smoothness >= 0.8 then
+			if math.abs(moveX) < 0.1 and math.abs(moveY) < 0.1 then return end
+		else
+			if math.abs(moveX) < 0.5 and math.abs(moveY) < 0.5 then return end
+		end
 
-				mousemoverel(moveX, moveY)
+		-- HATAK LOGIC
+		-- Kapag naka-scope, dahan-dahan (maganda ang smoothness)
+		if mb2Pressed then
+			mousemoverel(moveX, moveY)
+		-- Kapag nag-hihipfire (walang scope), i-multiply natin sa 0.6 para mabilis siya sumunod
+		-- pero hindi sobrang bilis para hindi tumalon ang camera mo
+		elseif mb1Pressed and not mb2Pressed then
+			mousemoverel(moveX * 0.6, moveY * 0.6)
+		end
 	end)
 
 	-- MENU UI.
@@ -609,7 +627,7 @@ noticeLabel.Parent = noticeRow
 		headshotButton.Text = settings.headshot and "ON" or "OFF"
 	end)
 
-	userInputService.InputBegan:Connect(function(input, gpe)
+			userInputService.InputBegan:Connect(function(input, gpe)
 	if gpe then return end
 
 	if screenGui and input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -620,8 +638,8 @@ noticeLabel.Parent = noticeRow
 		end
 	end
 
-	if input.UserInputType == Enum.UserInputType.MouseButton1
-		or input.UserInputType == Enum.UserInputType.MouseButton2 then
+	-- PAREHO nating papaganahin ang Left at Right click para umandar ang "aimActive"
+	if input.UserInputType == Enum.UserInputType.MouseButton2 or input.UserInputType == Enum.UserInputType.MouseButton1 then
 		aimActive = true
 	end
 
@@ -638,7 +656,6 @@ noticeLabel.Parent = noticeRow
 		if screenGui then
 			screenGui.Enabled = not screenGui.Enabled
 		end
-		-- Hidden mode: patayin din yung FOV circle at red selection box.
 		if fovCircle then
 			fovCircle.Visible = screenGui.Enabled
 		end
@@ -648,11 +665,9 @@ noticeLabel.Parent = noticeRow
 	end
 end)
 
-	userInputService.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1
-			or input.UserInputType == Enum.UserInputType.MouseButton2 then
-			if not userInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
-				and not userInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+			userInputService.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton2 or input.UserInputType == Enum.UserInputType.MouseButton1 then
+			if not userInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) and not userInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
 				aimActive = false
 				lockedTarget = nil
 				clearSelectionBox()
